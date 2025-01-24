@@ -1,0 +1,159 @@
+First requirement
+
+// build.gradle (Project)
+classpath 'com.google.gms:google-services:4.3.15'
+
+// build.gradle (App)
+implementation 'com.google.firebase:firebase-auth-ktx:21.0.5'
+implementation 'com.google.firebase:firebase-firestore-ktx:24.5.1'
+
+No olvides agregar al final del archivo build.gradle (app) esta línea:
+
+apply plugin: 'com.google.gms.google-services'
+
+Second requirement(activity_register.xml)
+
+nombre de usuario, correo electrónico y contraseña:
+
+————
+
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="32dp">
+
+    <EditText
+        android:id="@+id/editTextUsername"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Username" />
+
+    <EditText
+        android:id="@+id/editTextEmail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Email"
+        android:inputType="textEmailAddress" />
+
+    <EditText
+        android:id="@+id/editTextPassword"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Password"
+        android:inputType="textPassword" />
+
+    <Button
+        android:id="@+id/registerButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Register" />
+</LinearLayout>
+
+Third requirement 
+
+———-
+import android.os.Bundle
+import android.widget.Button
+import android.widget.EditText
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import com.google.firebase.auth.FirebaseAuth
+
+class RegisterActivity : AppCompatActivity() {
+
+    private lateinit var auth: FirebaseAuth
+    private lateinit var editTextUsername: EditText
+    private lateinit var editTextEmail: EditText
+    private lateinit var editTextPassword: EditText
+    private lateinit var registerButton: Button
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_register)
+
+        auth = FirebaseAuth.getInstance()
+
+        editTextUsername = findViewById(R.id.editTextUsername)
+        editTextEmail = findViewById(R.id.editTextEmail)
+        editTextPassword = findViewById(R.id.editTextPassword)
+        registerButton = findViewById(R.id.registerButton)
+
+        registerButton.setOnClickListener {
+            val username = editTextUsername.text.toString()
+            val email = editTextEmail.text.toString()
+            val password = editTextPassword.text.toString()
+
+            if (username.isNotEmpty() && email.isNotEmpty() && password.isNotEmpty()) {
+                // Validamos el dominio del correo
+                if (email.endsWith("@mydomain.com")) {
+                    registerUser(email, password)
+                } else {
+                    Toast.makeText(this, "Por favor usa un correo de dominio válido", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                Toast.makeText(this, "Por favor completa todos los campos", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun registerUser(email: String, password: String) {
+        auth.createUserWithEmailAndPassword(email, password)
+            .addOnCompleteListener(this) { task ->
+                if (task.isSuccessful) {
+                    // Registro exitoso
+                    Toast.makeText(this, "¡Registro exitoso!", Toast.LENGTH_SHORT).show()
+                    // Aquí puedes redirigir a otra actividad si lo deseas
+                } else {
+                    // Capturamos el error específico
+                    val exception = task.exception
+                    if (exception != null) {
+                        val errorMessage = when {
+                            exception.message?.contains("email") == true -> "Este correo ya está registrado."
+                            exception.message?.contains("password") == true -> "La contraseña debe tener al menos 6 caracteres."
+                            else -> "Ocurrió un error inesperado. Intenta de nuevo más tarde."
+                        }
+                        Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+    }
+}
+
+Fourth requirement
+
+————-
+
+if (email.endsWith("@mydomain.com")) {
+    registerUser(email, password)
+} else {
+    Toast.makeText(this, "Por favor usa un correo de dominio válido", Toast.LENGTH_SHORT).show()
+}
+
+fifth requirement
+
+———-
+val exception = task.exception
+if (exception != null) {
+    val errorMessage = when {
+        exception.message?.contains("email") == true -> "Este correo ya está registrado."
+        exception.message?.contains("password") == true -> "La contraseña debe tener al menos 6 caracteres."
+        else -> "Ocurrió un error inesperado. Intenta de nuevo más tarde."
+    }
+    Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show()
+}
+
+———
+Extra
+
+Most important part to implement on toast
+
+private fun showEncouragementMessage() {
+    val encouragementMessage = "Ganbatte kudasaimasu! You're doing amazing! 🌟 Don't worry, you'll find a way to fix it. Just take a deep breath and keep going. 🐱✨\n\n" +
+                               "    /\\_/\\  \n" +
+                               "   ( o.o )  \n" +
+                               "    > ^ <  \n\n" +
+                               "You're on the right path, and every step is progress. Keep it up!"
+
+    Toast.makeText(this, encouragementMessage, Toast.LENGTH_LONG).show()
+}
